@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-slate-700/70; }
+  body { @apply min-h-screen bg-ink font-sans text-slate-50 antialiased; }
+  button, input, select, textarea { font: inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-ink;
+  }
+}
+
+@layer components {
+  .panel { @apply rounded-xl border border-slate-700/60 bg-panel shadow-panel; }
+  .panel-pad { @apply panel p-5; }
+  .field { @apply mt-1.5 w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 transition focus:border-brand; }
+  .field-label { @apply text-sm font-medium text-slate-200; }
+  .muted { @apply text-sm text-slate-400; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-blue-500; }
+  .btn-secondary { @apply btn border border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700; }
+  .icon-btn { @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white; }
+  .table-wrap { @apply overflow-x-auto; }
+  .data-table { @apply w-full min-w-[700px] text-left text-sm; }
+  .data-table th { @apply border-b border-slate-700/70 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400; }
+  .data-table td { @apply border-b border-slate-800 px-4 py-4 text-slate-300; }
+  .data-table tbody tr { @apply transition hover:bg-slate-800/45; }
+}
