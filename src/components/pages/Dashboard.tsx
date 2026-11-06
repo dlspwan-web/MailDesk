@@ -4,11 +4,11 @@ import { campaignRows, deliveryData, performanceData, timelineData } from '../..
 import { StatusBadge } from '../ui'
 
 const metrics = [
-  { label: 'Correos enviados', value: '1,240', detail: '12.4% frente al período anterior', positive: true, icon: Send, color: 'text-blue-400 bg-blue-500/15' },
-  { label: 'Correos entregados', value: '1,182', detail: '95.3% de entregabilidad', positive: true, icon: CheckCircle2, color: 'text-green-400 bg-green-500/15' },
-  { label: 'Correos rebotados', value: '21', detail: '1.7% del total enviado', positive: false, icon: TriangleAlert, color: 'text-red-400 bg-red-500/15' },
-  { label: 'Aperturas registradas', value: '548', detail: '44.6% de tasa de apertura', positive: true, icon: Eye, color: 'text-amber-300 bg-amber-500/15' },
-  { label: 'Clics registrados', value: '189', detail: '15.2% de tasa de clics', positive: true, icon: MousePointer2, color: 'text-violet-300 bg-violet-500/15' },
+  { label: 'Correos enviados', value: '0', detail: 'Sin actividad registrada', positive: false, icon: Send, color: 'text-blue-400 bg-blue-500/15' },
+  { label: 'Correos entregados', value: '0', detail: 'Sin actividad registrada', positive: false, icon: CheckCircle2, color: 'text-green-400 bg-green-500/15' },
+  { label: 'Correos rebotados', value: '0', detail: 'Sin actividad registrada', positive: false, icon: TriangleAlert, color: 'text-red-400 bg-red-500/15' },
+  { label: 'Aperturas registradas', value: '0', detail: 'Sin actividad registrada', positive: false, icon: Eye, color: 'text-amber-300 bg-amber-500/15' },
+  { label: 'Clics registrados', value: '0', detail: 'Sin actividad registrada', positive: false, icon: MousePointer2, color: 'text-violet-300 bg-violet-500/15' },
 ]
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) {
