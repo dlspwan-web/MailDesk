@@ -36,6 +36,9 @@ jobs:
 
       - name: Crear versión pública
         run: npm run build
+        env:
+          VITE_SUPABASE_URL=https://fdflrfoxninkywwsfyis.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_atczbHU1p-DeW3Ugf9Y62w_C0IOlch9
 
       - name: Preparar GitHub Pages
         uses: actions/configure-pages@v5
