@@ -33,6 +33,25 @@ jobs:
 
       - name: Instalar dependencias
         run: npm install
+      
+      - name: Verificar configuración de Supabase
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ]; then
+            echo "ERROR: Falta la URL de Supabase"
+            exit 1
+          fi
+          if [[ "$VITE_SUPABASE_URL" != https://*.supabase.co ]]; then
+            echo "ERROR: La URL de Supabase tiene un formato incorrecto"
+            exit 1
+          fi
+          if [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "ERROR: Falta la clave publica de Supabase"
+            exit 1
+          fi
+          echo "Configuracion de Supabase correcta"
 
       - name: Crear versión pública
         run: npm run build
