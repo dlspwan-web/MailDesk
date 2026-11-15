@@ -4,7 +4,6 @@ import type { Section } from '../types'
 
 const navItems: { id: Section; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'campaigns', label: 'Campañas', icon: Mail },
   { id: 'composer', label: 'Crear correo', icon: FilePlus2 },
   { id: 'contacts', label: 'Contactos', icon: Users },
   { id: 'reports', label: 'Reportes', icon: BarChart3 },
