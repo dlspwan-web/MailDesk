@@ -45,6 +45,8 @@ jobs:
         with:
           path: ./dist
 
-      - name: Publicar sitio
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - - name: Publicar sitio
+  id: deployment
+  uses: actions/deploy-pages@v4
+  with:
+    artifact_name: github-pages
