@@ -76,7 +76,103 @@ export default function Composer() {
     <div className="grid gap-5 2xl:grid-cols-[290px_minmax(410px,1fr)_minmax(300px,0.9fr)]">
       <aside className="space-y-5"><section className="panel-pad"><h3 className="font-semibold text-white">1. Información del correo</h3><p className="mt-1 text-xs leading-5 text-slate-400">Estos datos se muestran solo en la vista previa.</p><div className="mt-4 space-y-3"><label className="field-label">Nombre de la campaña<input className="field" value={form.campaignName} placeholder="Ej. Novedades de octubre" onChange={(event) => updateForm('campaignName', event.target.value)} /></label><label className="field-label">Nombre del remitente<input className="field" value={form.senderName} placeholder="Ej. Equipo MailDesk" onChange={(event) => updateForm('senderName', event.target.value)} /></label><label className="field-label">Correo del remitente<input className="field" type="email" value={form.senderEmail} placeholder="hola@empresa.com" onChange={(event) => updateForm('senderEmail', event.target.value)} /></label><label className="field-label">Asunto del mensaje<input className="field" value={form.subject} placeholder="Un asunto claro y atractivo" onChange={(event) => updateForm('subject', event.target.value)} /></label><label className="field-label">Texto de previsualización<textarea className="field resize-none" rows={3} value={form.previewText} placeholder="Breve resumen que se verá antes de abrir" onChange={(event) => updateForm('previewText', event.target.value)} /></label></div></section><section className="panel-pad"><h3 className="font-semibold text-white">2. Herramientas de contenido</h3><p className="mt-1 text-xs leading-5 text-slate-400">Añade bloques visuales a tu mensaje.</p><div className="mt-4 grid grid-cols-2 gap-2">{tools.map(({ type }) => { const { label, icon } = typeInfo[type]; const openDialog = type === 'image' ? () => setDialog('image') : type === 'button' ? () => setDialog('button') : type === 'link' ? () => setDialog('link') : () => basicBlock(type); return <ToolButton key={type} icon={icon} label={`Añadir ${label.toLowerCase()}`} accent={type === 'image'} onClick={openDialog} /> })}</div><button onClick={() => setDialog('attachment')} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-900/45 px-3 py-3 text-xs font-medium text-slate-300 hover:border-slate-500 hover:bg-slate-800"><Paperclip size={17} />Adjuntar archivo</button></section></aside>
       <section className="panel overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/70 px-4 py-3"><div><h3 className="font-semibold text-white">3. Área visual de edición</h3><p className="mt-1 text-xs text-slate-400">Selecciona un bloque para editarlo.</p></div><div className="flex gap-0.5 rounded-lg border border-slate-700 bg-slate-900 p-1"><IconButton aria-label="Negrita"><Bold size={16} /></IconButton><IconButton aria-label="Cursiva"><Italic size={16} /></IconButton><IconButton aria-label="Subrayado"><Underline size={16} /></IconButton><span className="mx-1 w-px bg-slate-700" /><IconButton aria-label="Alinear a la izquierda"><AlignLeft size={16} /></IconButton><IconButton aria-label="Centrar"><AlignCenter size={16} /></IconButton><IconButton aria-label="Lista"><List size={16} /></IconButton></div></div><div className="bg-slate-800/40 p-3 sm:p-6"><div className="mx-auto min-h-[600px] max-w-[650px] rounded-lg bg-white p-5 shadow-xl sm:p-8">{blocks.length === 0 ? <div className="flex min-h-[460px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 px-8 text-center"><ImagePlus size={28} className="text-blue-500" /><p className="mt-4 max-w-sm text-sm leading-6 text-slate-500">Comienza a diseñar tu correo. Puedes escribir un mensaje, añadir una imagen o crear un botón para dirigir a tus destinatarios a una página web.</p></div> : <div className="space-y-4">{blocks.map((block) => <div key={block.id} className="group relative"><PreviewBlock block={block} editing onSelect={() => setSelectedId(block.id)} onChange={(updates) => updateBlock(block.id, updates)} />{selectedId === block.id && <div className="absolute -right-2 -top-3 flex rounded-md border border-slate-200 bg-white p-0.5 shadow-md"><IconButton aria-label="Subir bloque" onClick={() => moveBlock(block.id, -1)}><ArrowUp size={14} /></IconButton><IconButton aria-label="Bajar bloque" onClick={() => moveBlock(block.id, 1)}><ArrowDown size={14} /></IconButton><IconButton aria-label="Duplicar bloque" onClick={() => duplicateBlock(block)}><Copy size={14} /></IconButton><IconButton aria-label="Eliminar bloque" onClick={() => removeBlock(block.id)}><Trash2 size={14} className="text-red-500" /></IconButton></div>}</div>)}</div>}{selected && <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4"><span className="text-xs text-slate-400">Alineación:</span>{(['left', 'center', 'right'] as const).map((align) => <button key={align} onClick={() => updateBlock(selected.id, { alignment: align })} className={`rounded p-1.5 ${selected.alignment === align ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:bg-slate-100'}`}>{align === 'left' ? <AlignLeft size={16} /> : align === 'center' ? <AlignCenter size={16} /> : <AlignRight size={16} />}</button>)}</div>}</div></div></section>
-      <section className="panel overflow-hidden"><div className="flex items-center justify-between border-b border-slate-700/70 px-4 py-3"><div><h3 className="font-semibold text-white">4. Vista previa</h3><p className="mt-1 text-xs text-slate-400">Actualización automática</p></div><div className="flex rounded-lg border border-slate-700 bg-slate-900 p-1"><button onClick={() => setMode('desktop')} className={`rounded px-2.5 py-1 text-xs ${mode === 'desktop' ? 'bg-slate-700 text-white' : 'text-slate-400'}`}>Escritorio</button><button onClick={() => setMode('mobile')} className={`rounded px-2.5 py-1 text-xs ${mode === 'mobile' ? 'bg-slate-700 text-white' : 'text-slate-400'}`}>Móvil</button></div></div><div className="min-h-[600px] overflow-auto bg-slate-800/40 p-4"><div className={`mx-auto overflow-hidden rounded-xl bg-white shadow-2xl transition-all ${mode === 'mobile' ? 'max-w-[320px]' : 'max-w-[680px]'}`}><div className="border-b border-slate-200 p-4"><p className="truncate text-xs text-slate-400">De: <span className="text-slate-600">{form.senderName || 'Remitente'} &lt;{form.senderEmail || 'correo@ejemplo.com'}&gt;</span></p><p className="mt-2 text-sm font-semibold text-slate-900">{form.subject || 'Sin asunto'}</p><p className="mt-1 text-xs leading-5 text-slate-500">{form.previewText}</p></div><div className="p-5 sm:p-7"><div className="space-y-4">{blocks.length ? blocks.map((block) => <PreviewBlock key={block.id} block={block} />) : <p className="py-16 text-center text-sm text-slate-400">Tu mensaje aparecerá aquí.</p>}</div>{attachments.length > 0 && <div className="mt-7 border-t border-slate-200 pt-4"><p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Archivos adjuntos</p><div className="space-y-2">{attachments.map((attachment) => <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5" key={attachment.id}><File size={17} className="text-blue-500" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-medium text-slate-700">{attachment.name}</p><p className="text-[11px] text-slate-400">{readableSize(attachment.size)}</p></div></div>)}</div></div>}</div><div className="border-t border-slate-100 bg-slate-50 px-5 py-3 text-center text-[10px] text-slate-400">Vista previa de demostración · No se enviará ningún correo</div></div></div></section>
+     <section className="panel overflow-hidden">
+  <div className="flex items-center justify-between border-b border-slate-700/70 px-4 py-3">
+    <div>
+      <h3 className="font-semibold text-white">4. Vista previa</h3>
+      <p className="mt-1 text-xs text-slate-400">Actualización automática</p>
+    </div>
+
+    <div className="flex rounded-lg border border-slate-700 bg-slate-900 p-1">
+      <button onClick={() => setMode('desktop')} className={`rounded px-2.5 py-1 text-xs ${mode === 'desktop' ? 'bg-slate-700 text-white' : 'text-slate-400'}`}>
+        Escritorio
+      </button>
+      <button onClick={() => setMode('mobile')} className={`rounded px-2.5 py-1 text-xs ${mode === 'mobile' ? 'bg-slate-700 text-white' : 'text-slate-400'}`}>
+        Móvil
+      </button>
+    </div>
+  </div>
+
+  <div className="min-h-[600px] overflow-auto bg-slate-800/40 p-4">
+    <div className={`mx-auto overflow-hidden rounded-xl bg-white shadow-2xl transition-all ${mode === 'mobile' ? 'max-w-[320px]' : 'max-w-[680px]'}`}>
+
+      <div className="border-b border-slate-200 p-4">
+        <p className="truncate text-xs text-slate-400">
+          De: <span className="text-slate-600">{form.senderName || 'Remitente'} &lt;{form.senderEmail || 'correo@ejemplo.com'}&gt;</span>
+        </p>
+        <p className="mt-2 text-sm font-semibold text-slate-900">
+          {form.subject || 'Sin asunto'}
+        </p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          {form.previewText}
+        </p>
+      </div>
+
+      <div className="p-5 sm:p-7">
+        <div className="space-y-4">
+          {blocks.length ? (
+            blocks.map((block) => (
+              <PreviewBlock key={block.id} block={block} />
+            ))
+          ) : (
+            <p className="py-16 text-center text-sm text-slate-400">
+              Tu mensaje aparecerá aquí.
+            </p>
+          )}
+        </div>
+
+        {attachments.length > 0 && (
+          <div className="mt-7 border-t border-slate-200 pt-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Archivos adjuntos
+            </p>
+            <div className="space-y-2">
+              {attachments.map((attachment) => (
+                <div
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5"
+                  key={attachment.id}
+                >
+                  <File size={17} className="text-blue-500" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium text-slate-700">
+                      {attachment.name}
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      {readableSize(attachment.size)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pie automático de privacidad */}
+        <div className="mt-8 border-t border-slate-200 px-2 pt-5 text-center">
+          <p className="text-xs font-medium text-slate-600">
+            ¿Ya no deseas recibir nuestras comunicaciones?
+          </p>
+
+          <p className="mt-2">
+            <span className="text-xs font-semibold text-blue-600 underline">
+              Solicitar eliminación de mis datos
+            </span>
+          </p>
+
+          <p className="mt-2 text-[10px] leading-5 text-slate-400">
+            Tu privacidad es importante para nosotros. Puedes solicitar
+            la eliminación de tus datos personales en cualquier momento.
+          </p>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-100 bg-slate-50 px-5 py-3 text-center text-[10px] text-slate-400">
+        Vista previa de demostración · No se enviará ningún correo
+      </div>
+
+    </div>
+  </div>
+</section>
     </div>
     {dialog === 'image' && <Modal title="Añadir imagen" onClose={() => { setDialog(null); setImageError('') }}><p className="muted">Elige una imagen desde tu computador, pega un enlace o reutiliza una imagen de esta sesión.</p><input ref={imageInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) addLocalImage(file); event.currentTarget.value = '' }} /><button onClick={() => imageInput.current?.click()} className="mt-5 flex w-full flex-col items-center rounded-xl border-2 border-dashed border-blue-500/50 bg-blue-500/5 px-4 py-7 text-center transition hover:bg-blue-500/10"><Upload size={24} className="text-blue-400" /><span className="mt-3 text-sm font-semibold text-slate-100">Arrastra tu imagen aquí o haz clic para buscarla en tu computador</span><span className="mt-2 text-xs text-slate-400">JPG, PNG o WebP · hasta 5 MB</span></button><div className="my-5 flex items-center gap-3 text-xs text-slate-500"><span className="h-px flex-1 bg-slate-700" />o insertar desde un enlace<span className="h-px flex-1 bg-slate-700" /></div><label className="field-label">Pega aquí el enlace de tu imagen<input value={imageUrl} onChange={(event) => { setImageUrl(event.target.value); setImageError('') }} className="field" placeholder="https://ejemplo.com/imagen.jpg" /></label>{imageError && <p className="mt-2 text-xs text-red-300">{imageError}</p>}<button className="btn-secondary mt-3" onClick={addExternalImage}><ImagePlus size={16} />Insertar imagen desde enlace</button>{recents.length > 0 && <div className="mt-5 border-t border-slate-700 pt-4"><p className="text-sm font-medium text-slate-200">Usadas recientemente</p><div className="mt-3 grid grid-cols-3 gap-2">{recents.map((item) => <button key={item.id} onClick={() => { addBlock({ ...item, id: makeId('image') }); setDialog(null) }} className="group relative aspect-square overflow-hidden rounded-lg border border-slate-700"><img src={item.url} alt={item.alt || 'Imagen reciente'} className="h-full w-full object-cover" /><span className="absolute inset-0 grid place-items-center bg-slate-950/50 text-xs font-medium opacity-0 transition group-hover:opacity-100">Usar</span></button>)}</div></div>}</Modal>}
     {dialog === 'button' && <Modal title="Añadir botón" onClose={() => setDialog(null)}><p className="muted">Personaliza un botón que se verá dentro de tu correo.</p><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="field-label">Texto del botón<input className="field" value={buttonData.content} onChange={(event) => setButtonData((data) => ({ ...data, content: event.target.value }))} /></label><label className="field-label">Enlace de destino<input className="field" value={buttonData.url} onChange={(event) => setButtonData((data) => ({ ...data, url: event.target.value }))} /></label><label className="field-label">Color de fondo<input className="field h-10 p-1" type="color" value={buttonData.color} onChange={(event) => setButtonData((data) => ({ ...data, color: event.target.value }))} /></label><label className="field-label">Color del texto<input className="field h-10 p-1" type="color" value={buttonData.textColor} onChange={(event) => setButtonData((data) => ({ ...data, textColor: event.target.value }))} /></label><label className="field-label">Tamaño<select className="field" value={buttonData.size} onChange={(event) => setButtonData((data) => ({ ...data, size: event.target.value as EmailBlock['size'] }))}><option value="small">Pequeño</option><option value="medium">Mediano</option><option value="large">Grande</option></select></label><label className="field-label">Alineación<select className="field" value={buttonData.alignment} onChange={(event) => setButtonData((data) => ({ ...data, alignment: event.target.value as EmailBlock['alignment'] }))}><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label></div><p className="mt-4 text-xs font-medium text-slate-300">Estilos rápidos</p><div className="mt-2 flex flex-wrap gap-2">{[{ label: 'Azul corporativo', color: '#2563EB', textColor: '#FFFFFF' }, { label: 'Verde', color: '#16A34A', textColor: '#FFFFFF' }, { label: 'Negro', color: '#111827', textColor: '#FFFFFF' }, { label: 'Blanco con borde', color: '#FFFFFF', textColor: '#111827' }].map((preset) => <button key={preset.label} onClick={() => setButtonData((data) => ({ ...data, color: preset.color, textColor: preset.textColor }))} className="rounded-md border border-slate-600 px-2 py-1 text-xs text-slate-200">{preset.label}</button>)}</div><div className="mt-5 rounded-lg bg-slate-900 p-4 text-center"><span className="inline-block rounded-md px-5 py-2.5 text-sm font-semibold" style={{ backgroundColor: buttonData.color, color: buttonData.textColor }}>{buttonData.content || 'Botón'}</span></div><div className="mt-5 flex justify-end gap-2"><button className="btn-secondary" onClick={() => setDialog(null)}>Cancelar</button><button className="btn-primary" onClick={addButton}>Insertar botón</button></div></Modal>}
