@@ -1,16 +1,322 @@
-import { ChevronDown, FileUp, Filter, Plus, Search } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
-import { contactRows } from '../../lib/mockData'
-import { Modal, StatusBadge } from '../ui'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Plus, Search, Pencil, Trash2, Users, X } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+
+interface Contact {
+  id: string
+  name: string
+  email: string
+  created_at: string
+  updated_at: string
+}
 
 export default function Contacts() {
+  const [contacts, setContacts] = useState<Contact[]>([])
   const [query, setQuery] = useState('')
-  const [status, setStatus] = useState('Todos')
-  const [showImport, setShowImport] = useState(false)
-  const [fileName, setFileName] = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
-  const rows = useMemo(() => contactRows.filter((row) => (status === 'Todos' || row.status === status) && `${row.name} ${row.email} ${row.list}`.toLowerCase().includes(query.toLowerCase())), [query, status])
-  return <div className="space-y-6"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-sm text-slate-400">Datos de demostración</p><h2 className="mt-1 text-2xl font-semibold text-white">Contactos</h2><p className="mt-2 text-sm text-slate-400">Consulta y organiza las personas de tus listas.</p></div><div className="flex gap-2"><button className="btn-secondary" onClick={() => setShowImport(true)}><FileUp size={17} />Importar CSV</button><button className="btn-primary"><Plus size={18} />Agregar contacto</button></div></div>
-    <section className="panel overflow-hidden"><div className="flex flex-col gap-3 border-b border-slate-700/70 p-4 md:flex-row"><label className="relative block flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} className="field mt-0 pl-10" placeholder="Buscar por nombre, correo o lista" /></label><label className="relative"><Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} /><select value={status} onChange={(event) => setStatus(event.target.value)} className="field mt-0 appearance-none pl-9 pr-8"><option>Todos</option><option>Suscrita</option><option>Sin confirmar</option><option>Pausada</option></select><ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500" size={16} /></label></div><div className="table-wrap"><table className="data-table"><thead><tr><th>Nombre</th><th>Correo electrónico</th><th>Lista</th><th>Estado</th><th>Fecha de incorporación</th></tr></thead><tbody>{rows.map((row) => <tr key={row.email}><td className="font-medium text-slate-100">{row.name}</td><td>{row.email}</td><td>{row.list}</td><td><StatusBadge>{row.status}</StatusBadge></td><td>{row.added}</td></tr>)}</tbody></table></div>{rows.length === 0 && <p className="p-8 text-center text-sm text-slate-400">No encontramos contactos con esos filtros.</p>}</section>
-    {showImport && <Modal title="Importar contactos" onClose={() => setShowImport(false)}><p className="muted">Selecciona un archivo CSV con las columnas que deseas revisar. Esta maqueta no almacena ni importa contactos todavía.</p><input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => setFileName(event.target.files?.[0]?.name ?? '')} /><button onClick={() => fileRef.current?.click()} className="mt-5 flex w-full flex-col items-center rounded-xl border border-dashed border-slate-600 bg-slate-900/45 px-4 py-8 text-center hover:border-blue-500"><FileUp size={24} className="text-blue-400" /><span className="mt-3 text-sm font-medium text-slate-100">{fileName || 'Selecciona un archivo CSV'}</span><span className="mt-1 text-xs text-slate-500">La importación real se preparará en una etapa posterior.</span></button><div className="mt-5 flex justify-end"><button className="btn-secondary" onClick={() => setShowImport(false)}>Cerrar</button></div></Modal>}</div>
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [showForm, setShowForm] = useState(false)
+  const [editingContact, setEditingContact] = useState<Contact | null>(null)
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+
+  async function loadContacts() {
+    setLoading(true)
+    setError('')
+
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setContacts(data ?? [])
+    }
+
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    loadContacts()
+  }, [])
+
+  function openNewContact() {
+    setEditingContact(null)
+    setName('')
+    setEmail('')
+    setError('')
+    setShowForm(true)
+  }
+
+  function openEditContact(contact: Contact) {
+    setEditingContact(contact)
+    setName(contact.name)
+    setEmail(contact.email)
+    setError('')
+    setShowForm(true)
+  }
+
+  async function saveContact(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setSaving(true)
+    setError('')
+
+    const cleanName = name.trim()
+    const cleanEmail = email.trim().toLowerCase()
+
+    if (!cleanName || !cleanEmail) {
+      setError('Completa el nombre y el correo electrónico.')
+      setSaving(false)
+      return
+    }
+
+    const result = editingContact
+      ? await supabase
+          .from('contacts')
+          .update({
+            name: cleanName,
+            email: cleanEmail,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingContact.id)
+      : await supabase
+          .from('contacts')
+          .insert({
+            name: cleanName,
+            email: cleanEmail,
+          })
+
+    if (result.error) {
+      setError(result.error.message)
+      setSaving(false)
+      return
+    }
+
+    setShowForm(false)
+    setEditingContact(null)
+    setSaving(false)
+
+    await loadContacts()
+  }
+
+  async function deleteContact(contact: Contact) {
+    const confirmed = window.confirm(
+      `¿Seguro que deseas eliminar a ${contact.name} de tu agenda?`
+    )
+
+    if (!confirmed) return
+
+    const { error } = await supabase
+      .from('contacts')
+      .delete()
+      .eq('id', contact.id)
+
+    if (error) {
+      setError(error.message)
+      return
+    }
+
+    await loadContacts()
+  }
+
+  const filteredContacts = contacts.filter((contact) =>
+    `${contact.name} ${contact.email}`
+      .toLowerCase()
+      .includes(query.toLowerCase())
+  )
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-sm text-slate-400">Agenda de MailDesk</p>
+          <h2 className="mt-1 text-2xl font-semibold text-white">
+            Contactos
+          </h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Administra y organiza las personas de tus campañas.
+          </p>
+        </div>
+
+        <button className="btn-primary" onClick={openNewContact}>
+          <Plus size={18} />
+          Agregar contacto
+        </button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <section className="panel-pad flex items-center gap-4">
+          <span className="grid h-11 w-11 place-items-center rounded-lg bg-blue-500/15 text-blue-300">
+            <Users size={21} />
+          </span>
+          <div>
+            <p className="text-sm text-slate-400">Total de contactos</p>
+            <p className="text-2xl font-semibold text-white">
+              {contacts.length}
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <section className="panel overflow-hidden">
+        <div className="border-b border-slate-700/70 p-4">
+          <label className="relative block">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+              size={18}
+            />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="field mt-0 pl-10"
+              placeholder="Buscar por nombre o correo electrónico"
+            />
+          </label>
+        </div>
+
+        {error && (
+          <div className="m-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <p className="p-8 text-center text-sm text-slate-400">
+            Cargando contactos...
+          </p>
+        ) : filteredContacts.length === 0 ? (
+          <div className="p-10 text-center">
+            <Users size={30} className="mx-auto text-slate-500" />
+            <p className="mt-3 font-medium text-white">
+              {query ? 'No encontramos resultados.' : 'Todavía no hay contactos.'}
+            </p>
+            <p className="mt-1 text-sm text-slate-400">
+              {query
+                ? 'Prueba con otro nombre o correo.'
+                : 'Agrega tu primer contacto para comenzar.'}
+            </p>
+          </div>
+        ) : (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Correo electrónico</th>
+                  <th>Fecha de incorporación</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredContacts.map((contact) => (
+                  <tr key={contact.id}>
+                    <td className="font-medium text-slate-100">
+                      {contact.name}
+                    </td>
+                    <td>{contact.email}</td>
+                    <td>
+                      {new Date(contact.created_at).toLocaleDateString('es-CO')}
+                    </td>
+                    <td>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openEditContact(contact)}
+                          className="rounded-lg p-2 text-blue-300 hover:bg-blue-500/10"
+                          title="Editar contacto"
+                        >
+                          <Pencil size={16} />
+                        </button>
+
+                        <button
+                          onClick={() => deleteContact(contact)}
+                          className="rounded-lg p-2 text-red-300 hover:bg-red-500/10"
+                          title="Eliminar contacto"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {showForm && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+          <section className="panel w-full max-w-lg p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">
+                {editingContact ? 'Editar contacto' : 'Nuevo contacto'}
+              </h3>
+
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={saveContact} className="mt-5 space-y-4">
+              <label className="field-label">
+                Nombre completo
+                <input
+                  className="field"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Ej. Juan Pérez"
+                  required
+                />
+              </label>
+
+              <label className="field-label">
+                Correo electrónico
+                <input
+                  className="field"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="ejemplo@correo.com"
+                  required
+                />
+              </label>
+
+              {error && (
+                <p className="text-sm text-red-400">{error}</p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={saving}
+                >
+                  {saving
+                    ? 'Guardando...'
+                    : editingContact
+                      ? 'Guardar cambios'
+                      : 'Guardar contacto'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+    </div>
+  )
 }
